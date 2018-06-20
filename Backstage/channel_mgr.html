@@ -86,7 +86,10 @@
 <script>
     //创建渠道二维码
     $('#cteSub').click(function(){ 
-
+        chName.value = $.trim(chName.value);
+        apId.value = $.trim(apId.value);
+        apSec.value = $.trim(apSec.value);
+        chCode.value = $.trim(chCode.value);
         var postUrl = 'https://aiyagame.com/api/sas/channel/create?channelName=' + chName.value + '&appid=' + apId.value +
         '&appsecret=' + apSec.value + '&channelCode=' + chCode.value + '&scene=channelCode=' + chCode.value;
 
@@ -140,7 +143,7 @@
                             ,{field:'appid', width:200, title: 'appid'}
                             ,{field:'channelName', width:120, title: '渠道名称'}
                             ,{field:'channelCode', width:160, title: '渠道唯一标识', sort: true}
-                            ,{field:'imgUrl', minWidth:120, title: '二维码地址'}
+                            ,{field:'imgUrl', minWidth:120, title: '二维码地址', adds:true}
                             ,{field:'createTime', width:200, title: '创建时间', sort: true}
                             ,{field:'count', width:100, title: '人数总数', sort: true}
                         ]]
