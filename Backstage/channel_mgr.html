@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <title>河马统计后台</title>
+    <!--[if lt IE 8]>
+    <meta http-equiv="refresh" content="0;ie.html" />
+    <![endif]-->
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link href="css/bootstrap.min.css?v=3.3.5" rel="stylesheet">
+    <link href="css/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+    <link href="css/animate.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/plugins/webuploader/webuploader.css">
+    <link rel="stylesheet" href="js/plugins/layui/css/layui.css">
+    <link rel="stylesheet" href="css/demo/webuploader-demo.min.css">
+    <link rel="stylesheet" href="css/plugins/iCheck/custom.css">
+    <link rel="stylesheet" href="css/plugins/jqgrid/ui.jqgrid.css">
+    <link rel="stylesheet" href="css/demo/laypage.css">
+    <link href="css/style.min.css?v=4.0.0" rel="stylesheet">
+</head>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <div class="row">
+        
+         <div class="col-sm-12 col-lg-12 form">
+            <form class="form-inline">
+                <div class="form-group">
+                    <input id="apId" type="text" class="form-control" placeholder="appid">
+                </div>
+                <div class="form-group">
+                    <input id="apSec" type="text" class="form-control" placeholder="密钥(appsecret)">
+                </div>
+                <div class="form-group">
+                    <input id="chName" type="text" class="form-control" placeholder="渠道名称">
+                </div>
+                <div class="form-group">
+                    <input id="chCode" type="text" class="form-control" placeholder="渠道标识(channelCode)">
+                </div>
+                <div class="form-group">
+                    <button id="cteSub" class="btn btn-primary" type="button"><i class="fa fa-search-plus"></i>添加渠道二维码</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-12 col-md-12 form">
+            <form action="https://aiyagame.com/api/sas/channel/list?appid=" class="form-inline">
+                <div class="form-group">
+                    <input id="chApid" type="text" class="form-control" placeholder="根据appid查询渠道数据">
+                </div>
+                <div class="form-group">
+                    <button id="schAppid" class="btn btn-primary" type="button"><i class="fa fa-search-plus"></i>查询</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <!-- <table class="table table-responsive table-bordered text-center source-table">
+            </table> -->
+
+            <div id="test">
+
+            </div>
+
+            <!-- <div class="jqGrid_wrapper">
+                <table id="table_list_2" class="table table-responsive table-bordered text-center"></table>
+                <div id="pager_list_2"></div>
+            </div>-->
+        </div>
+    </div>
+</div>
+
+
+
+</body>
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/plugins/iCheck/icheck.min.js"></script>
+<script src="js/plugins/jqgrid/i18n/grid.locale-cn.js"></script>
+<script src="js/plugins/jqgrid/jquery.jqGrid.min.js"></script>
+<script src="js/plugins/webuploader/webuploader.min.js"></script>
+<script src="js/plugins/layui/layui.js"></script>
+<script>
+    //创建渠道二维码
+    $('#cteSub').click(function(){ 
+
+        var postUrl = 'https://aiyagame.com/api/sas/channel/create?channelName=' + chName.value + '&appid=' + apId.value +
+        '&appsecret=' + apSec.value + '&channelCode=' + chCode.value + '&scene=channelCode=' + chCode.value;
+
+        console.log(postUrl);
+
+        if(chName.value == "" || apId.value == "" || apSec.value == "" || chCode.value == ""){
+            alert("渠道信息填写不完整！请补完！");
+        }else{
+            $.ajax({
+                url:postUrl,
+                type:"post",
+                success:function(data){
+                    console.log(data);
+                    if(data.statusCode == 1){
+                        alert("渠道二维码已生成，请复制下方二维码地址进行下载");
+                    }else{
+                        alert(data.clientMessage);
+                    }
+                }
+            }); 
+        }  
+    });
+
+    //根据appid查询渠道数据
+    $('#schAppid').click(function(){ 
+
+        var postUrl = 'https://aiyagame.com/api/sas/channel/list?appid=' + chApid.value;
+
+        console.log(postUrl);
+
+        $.ajax({
+            url:postUrl,
+            type:"post",   
+            success: function(res){
+                console.log(res);
+                var data = res.data;
+                //格式化时间戳
+                if(data&&data[0]&&data[0].createTime){
+                    for(var i=0, sz = data.length; i < sz; i++){
+                        data[i].createTime = timestampToTime(data[i].createTime);
+                    }
+                }
+               //分页
+                layui.use(['table'], function(){
+                    var table = layui.table;
+                    table.render({
+                        elem: '#test'
+                        ,data:data
+                        ,cols: [[
+                            {type:'checkbox'}
+                            ,{field:'appid', width:200, title: 'appid'}
+                            ,{field:'channelName', width:120, title: '渠道名称'}
+                            ,{field:'channelCode', width:160, title: '渠道唯一标识', sort: true}
+                            ,{field:'imgUrl', minWidth:120, title: '二维码地址'}
+                            ,{field:'createTime', width:200, title: '创建时间', sort: true}
+                            ,{field:'count', width:100, title: '人数总数', sort: true}
+                        ]]
+                        ,page: true
+                    });
+                });
+            }
+        }); 
+          
+    });
+
+    var Y = '';
+    var M = '';
+    var D = '';
+    // var h = '';
+    // var m = '';
+    // var s = '';
+    timestampToTime = function(e) {
+        var date = new Date(e);
+        Y = date.getFullYear() + '-';
+        M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+        D = date.getDate() + ' ';
+        // h = date.getHours() + ':';
+        // m = date.getMinutes() + ':';
+        // s = date.getSeconds();
+        // return Y+M+D+h+m+s;
+        return Y+M+D;
+    }
+
+    $(document).ready(function () {
+        $(".i-checks").iCheck({
+            checkboxClass:'icheckbox_square-blue',
+            radioClass: "iradio_square-blue",
+
+        })
+
+        // $.ajax({    
+        //     //请求方式    
+        //     type:"GET",    
+        //     url:"https://aiyagame.com/api/sas/channel/list?appid=wx30b393a561265229",  
+        //     dataType: "json",    
+        //     success: function(res){
+        //        // alert(data);
+        //         console.log(res);
+
+        //         var data = res.data;
+        //         //格式化时间戳
+        //         if(data&&data[0]&&data[0].createTime){
+        //             for(var i=0, sz = data.length; i < sz; i++){
+        //                 data[i].createTime = timestampToTime(data[i].createTime);
+        //             }
+        //         }
+        //        //分页
+        //         layui.use(['table'], function(){
+        //             var table = layui.table;
+        //             table.render({
+        //                 elem: '#test'
+        //                 ,data:data
+        //                 ,cols: [[
+        //                     {type:'checkbox'}
+        //                     ,{field:'appid', width:200, title: 'appid'}
+        //                     ,{field:'channelName', width:120, title: '渠道名称'}
+        //                     ,{field:'channelCode', width:160, title: '渠道唯一标识', }
+        //                     ,{field:'imgUrl', minWidth:120, title: '二维码地址'}
+        //                     ,{field:'createTime', width:200, title: '创建时间', sort: true}
+        //                     ,{field:'count', width:100, title: '人数总数', sort: true}
+        //                 ]]
+        //                 ,page: true
+        //             });
+        //         });
+                
+        //     }    
+        // });
+
+    })
+
+</script>
+</html>

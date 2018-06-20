@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <title>河马统计后台</title>
+    <!--[if lt IE 8]>
+    <meta http-equiv="refresh" content="0;ie.html" />
+    <![endif]-->
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link href="css/bootstrap.min.css?v=3.3.5" rel="stylesheet">
+    <link href="css/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+    <link href="css/animate.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/plugins/webuploader/webuploader.css">
+    <link rel="stylesheet" href="js/plugins/layui/css/layui.css">
+    <link rel="stylesheet" href="css/demo/webuploader-demo.min.css">
+    <link rel="stylesheet" href="css/plugins/iCheck/custom.css">
+    <link rel="stylesheet" href="css/plugins/jqgrid/ui.jqgrid.css">
+    <link rel="stylesheet" href="css/demo/laypage.css">
+    <link href="css/style.min.css?v=4.0.0" rel="stylesheet">
+</head>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <div class="row">
+        
+         <div class="col-sm-12 col-lg-12 form">
+            <form class="form-inline">
+                <div class="form-group">
+                    <input id="gName" type="text" class="form-control" placeholder="游戏名称">
+                </div>
+                <div class="form-group">
+                    <input id="gApid" type="text" class="form-control" placeholder="appid">
+                </div>
+                <div class="form-group">
+                    <input id="gSec" type="text" class="form-control" placeholder="密钥(appsecret)" id="gSec">
+                </div>
+                <div class="form-group">
+                    <button id="cteGame" class="btn btn-primary" type="button" id="createGame"><i class="fa fa-search-plus"></i>添加游戏</button>
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <!-- <table class="table table-responsive table-bordered text-center source-table">
+            </table> -->
+
+            <div id="test">
+
+            </div>
+
+           <!-- <div class="jqGrid_wrapper">
+                <table id="table_list_2" class="table table-responsive table-bordered text-center"></table>
+                <div id="pager_list_2"></div>
+            </div>-->
+        </div>
+    </div>
+</div>
+
+
+
+</body>
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/plugins/iCheck/icheck.min.js"></script>
+<script src="js/plugins/jqgrid/i18n/grid.locale-cn.js"></script>
+<script src="js/plugins/jqgrid/jquery.jqGrid.min.js"></script>
+<script src="js/plugins/webuploader/webuploader.min.js"></script>
+<script src="js/plugins/layui/layui.js"></script>
+<script>
+    //创建游戏
+    $('#cteGame').click(function(){ 
+
+        var postUrl = "https://aiyagame.com/api/sas/game/create?gameName=" + gName.value + "&appid=" + gApid.value + "&appsecret=" + gSec.value;
+
+        console.log(postUrl);
+
+        if(gName.value == "" || gApid.value == "" || gSec.value == ""){
+            alert("游戏信息填写不完整！请补完！");
+        }else{
+            $.ajax({
+                url:postUrl,
+                type:"post",
+                success:function(res){
+                    console.log(res);
+                    if(res.statusCode == 1){
+                        alert("游戏创建成功！");
+                        reqGameList();
+                    }else{
+                        alert(data.clientMessage);
+                    }
+                }
+            }); 
+        }
+    });
+
+    var Y = '';
+    var M = '';
+    var D = '';
+    // var h = '';
+    // var m = '';
+    // var s = '';
+    timestampToTime = function(e) {
+        var date = new Date(e);
+        Y = date.getFullYear() + '-';
+        M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+        D = date.getDate() + ' ';
+        // h = date.getHours() + ':';
+        // m = date.getMinutes() + ':';
+        // s = date.getSeconds();
+        // return Y+M+D+h+m+s;
+        return Y+M+D;
+    }
+
+    reqGameList = function(){
+        /**请求游戏列表*/
+        $.ajax({    
+            type:"GET",    
+            url:"https://aiyagame.com/api/sas/game/list",  
+            dataType: "json",    
+            success: function(res){
+                console.log(res); 
+
+                var data = res.data;
+                //格式化时间戳
+                if(data&&data[0]&&data[0].createDate){
+                    for(var i=0, sz = data.length; i < sz; i++){
+                        data[i].createDate = timestampToTime(data[i].createDate);
+                    }
+                } 
+               //分页
+                layui.use(['table'], function(){
+                    var table = layui.table;
+                    table.render({
+                        elem: '#test'
+                        ,data: data
+                        ,cols: [[
+                            {type:'checkbox'}
+                            ,{field:'id', width:80, title: 'ID'}
+                            ,{field:'gameName', width:300, title: '游戏名称'}
+                            ,{field:'appid', width:200, title: 'appid'}
+                            ,{field:'secret', minWidth:120, title: 'appsecret', }
+                            ,{field:'createDate', width:200, title: '创建时间', sort: true}
+                        ]]
+                        ,page: true
+                    });
+                }); 
+            }    
+        });
+    }
+
+    $(document).ready(function () {
+        $(".i-checks").iCheck({
+            checkboxClass:'icheckbox_square-blue',
+            radioClass: "iradio_square-blue",
+
+        })
+
+        reqGameList();
+    })
+
+</script>
+</html>
